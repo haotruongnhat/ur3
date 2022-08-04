@@ -11,6 +11,7 @@ LABEL maintainer Cristian Beltran "beltran@hlab.sys.es.osaka-u.ac.jp"
 # setup timezone
 RUN echo 'Etc/UTC' > /etc/timezone && \
     ln -s /usr/share/zoneinfo/Etc/UTC /etc/localtime && \
+    apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/3bf863cc.pub && \
     apt-get update && apt-get install -q -y tzdata && rm -rf /var/lib/apt/lists/*
 
 # setup keys
