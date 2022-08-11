@@ -13,7 +13,7 @@ services:
       - HOST_UID=1000
       - HOST_GID=1000
       # Display X Server GUI.
-      - DISPLAY
+      - DISPLAY=172.27.160.1:0.0
       - QT_X11_NO_MITSHM=1
       # Configure Nvidia Docker interface.
       - NVIDIA_VISIBLE_DEVICES=all
@@ -22,7 +22,7 @@ services:
       - DOCKER_RUNTIME=${DOCKER_RUNTIME}
       # Needs to be explicitly define
       - ROS_HOSTNAME=localhost
-    image: ros-ur3:melodic
+    image: haotruongnhat/ros-ur3:melodic
     tty: true
     build:
       context: ../
@@ -32,12 +32,6 @@ services:
     volumes:
       # Map ROS workspace folders.
       - ../:/root/ros_ws/src/ros_ur3
-      # Grant display access to X Server.
-      - /tmp/.X11-unix:/tmp/.X11-unix
-      # Grant bus access to FlexBE App.
-      - /var/run/dbus/system_bus_socket:/var/run/dbus/system_bus_socket
-      # Grant access to serial usb ports for u2d2
-      - /dev/:/dev/
     network_mode: host
     command: tail -f /dev/null
 

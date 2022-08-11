@@ -262,7 +262,7 @@
 
     <!-- Cubes -->
     <model name="cube1">
-      <pose>0.4 -0.2 0.775 0 0 0</pose>
+      <pose>0.45 -0.1 0.775 0 0 0</pose>
       <link name="link">
         <pose>0 0 0.02 0 0 0</pose>
         <inertial>
@@ -319,7 +319,7 @@
     </model>
 
     <model name="cube2">
-      <pose>0.4 0 0.775 0 0 0</pose>
+      <pose>0.45 0 0.775 0 0 0</pose>
       <link name="link">
         <pose>0 0 0.02 0 0 0</pose>
         <inertial>
@@ -376,7 +376,7 @@
     </model>
 
     <model name="cube3">
-      <pose>0.4 0.2 0.775 0 0 0</pose>
+      <pose>0.45 0.1 0.775 0 0 0</pose>
       <link name="link">
         <pose>0 0 0.02 0 0 0</pose>
         <inertial>
