@@ -62,10 +62,10 @@
 
   <!-- Run Rviz and load the default config to see the state of the move_group node -->
 
-  <node name="$(anon rviz)" launch-prefix="" pkg="rviz" type="rviz" respawn="false"
+  <!-- <node name="$(anon rviz)" launch-prefix="" pkg="rviz" type="rviz" respawn="false"
 	args="-d $(find ur_gripper_85_moveit_config)/launch/moveit.rviz" output="screen">
     <rosparam command="load" file="$(find ur_gripper_85_moveit_config)/config/kinematics.yaml"/>
-  </node>
+  </node> -->
 
   <!-- If database loading was enabled, start mongodb as well -->
   <include file="$(find ur_gripper_85_moveit_config)/launch/default_warehouse_db.launch" if="$(arg db)">

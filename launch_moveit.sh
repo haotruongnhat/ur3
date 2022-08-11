@@ -1,0 +1,1 @@
+roslaunch ur_gripper_85_moveit_config start_moveit.launch

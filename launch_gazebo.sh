@@ -1,0 +1,1 @@
+roslaunch ur3_gazebo ur_gripper_85_cubes_realsense.launch ur_robot:=ur3 grasp_plugin:=1
