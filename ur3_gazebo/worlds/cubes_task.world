@@ -45,19 +45,19 @@
     <!--         filename="libgazebo_ros_link_attacher.so"/> -->
 
     <!-- The robot base -->
-    <model name="ur_base">
+    <!-- <model name="ur_base">
       <include>
         <uri>model://ur_base</uri>
         <pose>0 0 0 0 0 0</pose>
       </include>
-    </model>
+    </model> -->
 
     <!-- Table -->
     <!-- Table top is at (x,y,z) = (0.7, 0, 0.775) -->
     <!-- Table top size is 0.9x0.9 -->
     <model name='cafe_table'>
       <link name='cafe_table::link'>
-        <pose frame=''>0.75 0 0 0 -0 0</pose>
+        <pose frame=''>0.4 0 0 0 -0 0</pose>
         <self_collide>0</self_collide>
         <kinematic>0</kinematic>
         <gravity>1</gravity>
@@ -261,7 +261,7 @@
     </model>
 
     <!-- Cubes -->
-    <model name="cube1">
+    <!-- <model name="cube1">
       <pose>0.45 -0.1 0.775 0 0 0</pose>
       <link name="link">
         <pose>0 0 0.02 0 0 0</pose>
@@ -316,10 +316,10 @@
           </material>
         </visual>
       </link>
-    </model>
+    </model> -->
 
     <model name="cube2">
-      <pose>0.45 0 0.775 0 0 0</pose>
+      <pose>0.475 0.1 0.775 0 0 0</pose>
       <link name="link">
         <pose>0 0 0.02 0 0 0</pose>
         <inertial>
@@ -375,7 +375,7 @@
       </link>
     </model>
 
-    <model name="cube3">
+    <!-- <model name="cube3">
       <pose>0.45 0.1 0.775 0 0 0</pose>
       <link name="link">
         <pose>0 0 0.02 0 0 0</pose>
@@ -430,7 +430,7 @@
           </material>
         </visual>
       </link>
-    </model>
+    </model> -->
 
   </world>
 
