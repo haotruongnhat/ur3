@@ -2,33 +2,29 @@
 # ros-melodic-base, gazebo9, gps, python libraries 
 # Python 3 version
 
-FROM nvidia/cuda:11.4.2-devel-ubuntu20.04
-# FROM tensorflow/tensorflow:latest-gpu-py3
-# LABEL maintainer Cristian Beltran "beltran@hlab.sys.es.osaka-u.ac.jp"
+ARG UBUNTU_VERSION=18.04
+
+FROM tensorflow/tensorflow:latest-gpu-py3
+LABEL maintainer Cristian Beltran "beltran@hlab.sys.es.osaka-u.ac.jp"
 
 #### Use an official ROS runtime as a parent image
 # setup timezone
 RUN echo 'Etc/UTC' > /etc/timezone && \
     ln -s /usr/share/zoneinfo/Etc/UTC /etc/localtime && \
-    # apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/3bf863cc.pub && \
+    apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/3bf863cc.pub && \
     apt-get update && apt-get install -q -y tzdata && rm -rf /var/lib/apt/lists/*
 
 # setup keys
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
 
 # setup sources.list
-# RUN echo "deb http://packages.ros.org/ros/ubuntu bionic main" > /etc/apt/sources.list.d/ros1-latest.list
-RUN echo "deb http://packages.ros.org/ros/ubuntu focal main" > /etc/apt/sources.list.d/ros-latest.list
-RUN apt-get update \
-    && apt-get install -y curl \
-    && curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | apt-key add -
-
+RUN echo "deb http://packages.ros.org/ros/ubuntu bionic main" > /etc/apt/sources.list.d/ros1-latest.list
 
 # install bootstrap tools
 RUN apt-get update && apt-get install --no-install-recommends -y \
-    python3-rosdep \
-    python3-rosinstall \
-    python3-vcstools \
+    python-rosdep \
+    python-rosinstall \
+    python-vcstools \
     && rm -rf /var/lib/apt/lists/*
 
 # setup environment
@@ -40,11 +36,14 @@ RUN rosdep init \
     && rosdep update
 
 # install ros packages
-ENV ROS_DISTRO noetic
+ENV ROS_DISTRO melodic
+RUN apt-get update && apt-get install -y \
+    ros-melodic-ros-core=1.4.1-0* \
+    && rm -rf /var/lib/apt/lists/*
 
 # install ros packages
 RUN apt-get update && apt-get install -y \
-    ros-$ROS_DISTRO-desktop \
+    ros-melodic-ros-base=1.4.1-0* \
     && rm -rf /var/lib/apt/lists/*
 
 # install universal robot ros packages
@@ -55,7 +54,7 @@ RUN apt-get update && apt-get install -y \
     ros-$ROS_DISTRO-eigen-conversions \
     # install catkin
     ros-$ROS_DISTRO-catkin \
-    python3-catkin-tools \
+    python-catkin-tools \
     # Install Numpy Boost
     libboost-dev \
     libboost-python-dev \
@@ -65,7 +64,7 @@ RUN apt-get update && apt-get install -y \
     libprotobuf-dev \
     protobuf-compiler \
     # python dependencies
-    python3-setuptools \
+    python-setuptools \
     python3-tk \
     python3-numpy \
     # utils
@@ -91,9 +90,10 @@ ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update && apt-get install -q -y \
     binutils \
     mesa-utils \
+    module-init-tools \
     x-window-system \
-    gazebo11 \
-    libgazebo11-dev \
+    gazebo9 \
+    libgazebo9-dev \
     && rm -rf /var/lib/apt/lists/*
 
 ADD ./docker/orocos_kinematics_dynamics.tar.xz /root/
@@ -103,7 +103,7 @@ ADD ./docker/sip-4.19.8.tar.gz /root/
 
 RUN /bin/bash -c "cd ~/ \
                && cd sip-4.19.8 \
-               && python3 configure.py \
+               && python configure.py \
                && make -j4 && make install"
 
 # Install PyKDL
@@ -115,7 +115,7 @@ RUN /bin/bash -c "cd ~/orocos_kinematics_dynamics/orocos_kdl \
 
 RUN /bin/bash -c "cd ~/orocos_kinematics_dynamics/python_orocos_kdl \
                && mkdir build && cd build \
-               && cmake -DCMAKE_BUILD_TYPE=Release -DPYTHON_INCLUDE_DIR=$(python3 -c "from distutils.sysconfig import get_python_inc; print(get_python_inc())")  -DPYTHON_LIBRARY=$(python3 -c "import distutils.sysconfig as sysconfig; print(sysconfig.get_config_var('LIBDIR'))") -DPYTHON_VERSION=3 .. \
+               && cmake -DCMAKE_BUILD_TYPE=Release -DPYTHON_INCLUDE_DIR=$(python -c "from distutils.sysconfig import get_python_inc; print(get_python_inc())")  -DPYTHON_LIBRARY=$(python -c "import distutils.sysconfig as sysconfig; print(sysconfig.get_config_var('LIBDIR'))") -DPYTHON_VERSION=3 .. \
                && make -j4"
 
 COPY ./docker/bashrc /etc/bash.bashrc
@@ -128,12 +128,10 @@ RUN /bin/bash -c "source /opt/ros/$ROS_DISTRO/setup.bash \
                && cd ~/ros_ws/ \
                && catkin init"
 
-RUN apt update && apt install -y git
-
 # Installing repo required for homework
 RUN /bin/bash -c "cd ~/ros_ws/src \
                && git clone https://bitbucket.org/traclabs/trac_ik.git \
-               && git clone -b noetic-devel https://github.com/cambel/ur3.git ros_ur3 \
+               && git clone https://github.com/cambel/ur3.git ros_ur3 \
                && git clone https://github.com/UniversalRobots/Universal_Robots_ROS_Driver.git universal_robots_ros_driver \
                && git clone -b calibration_devel https://github.com/fmauch/universal_robot.git universal_robot"
 
@@ -148,13 +146,13 @@ RUN cd ~/ros_ws \
 
 ENV PYTHONIOENCODING UTF-8
 RUN /bin/bash -c "cd ~/ros_ws/src/gazebo_ros_link_attacher \
+                  && git checkout melodic-devel \
                   && cd ~/ros_ws/src/robotiq \
-                  && git fetch origin && git checkout $ROS_DISTRO-devel"
+                  && git fetch origin && git checkout melodic-devel"
 
 ## Python libraries ##
-RUN apt update && apt install -y python3-pip
-RUN python3 -m pip install pip --upgrade && \
-    pip3 install matplotlib spicy protobuf pyyaml pyquaternion rospkg \
+RUN python -m pip install pip --upgrade && \
+    pip install matplotlib==2.2.3 spicy protobuf pyyaml pyquaternion rospkg \
     lxml tqdm catkin-pkg empy PyVirtualDisplay defusedxml gym psutil pyprind
 
 # Compiling ros workspace
@@ -177,7 +175,7 @@ RUN /bin/bash -c "cd ~/ \
                && cd ur_ikfast && pip install -e ."
 
 # fix for sip
-RUN rm /usr/lib/python3/dist-packages/sip.cpython-38-x86_64-linux-gnu.so
+RUN rm /usr/lib/python3/dist-packages/sip.cpython-36m-x86_64-linux-gnu.so
 
 RUN pip install xmltodict imageio IPython
 
@@ -194,12 +192,12 @@ RUN apt-get update && apt-get install -y \
     ros-$ROS_DISTRO-rqt-multiplot \
     && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update && apt-get install -y \
-    ros-$ROS_DISTRO-moveit \
-    ros-$ROS_DISTRO-moveit-runtime \
-    ros-$ROS_DISTRO-moveit-python \
-    ros-$ROS_DISTRO-moveit-resources \
-    && rm -rf /var/lib/apt/lists/*
+# RUN apt-get update && apt-get install -y \
+#     ros-melodic-moveit \
+#     ros-melodic-moveit-runtime \
+#     ros-melodic-moveit-python \
+#     ros-melodic-moveit-resources \
+#     && rm -rf /var/lib/apt/lists/*
 
 # Workaround for python3 + tf2
 RUN pip install --extra-index-url https://rospypi.github.io/simple/ tf2_ros --ignore-installed
@@ -213,24 +211,24 @@ RUN /bin/bash -c "cd ~/ros_ws/src/robotiq \
 
 RUN /bin/bash -c "source /opt/ros/$ROS_DISTRO/setup.bash \
                 && cd ~/ros_ws/src \
-                && git clone -b $ROS_DISTRO-devel  https://github.com/ros/geometry2.git && \
+                && git clone -b melodic-devel  https://github.com/ros/geometry2.git && \
                 git clone https://github.com/eric-wieser/ros_numpy"
 
-# RUN source /opt/ros/$ROS_DISTRO/setup.bash \
-#     && cd ~/ros_ws \
-#     && wstool merge -t src https://raw.githubusercontent.com/ros-planning/moveit/$ROS_DISTRO-devel/moveit.rosinstall \
-#     && wstool update -t src
+RUN source /opt/ros/$ROS_DISTRO/setup.bash \
+    && cd ~/ros_ws \
+    && wstool merge -t src https://raw.githubusercontent.com/ros-planning/moveit/melodic-devel/moveit.rosinstall \
+    && wstool update -t src
 
-# RUN cd ~/ros_ws \
-#     && apt-get update \
-#     && rosdep update \
-#     && rosdep install -y --from-paths src --ignore-src --rosdistro ${ROS_DISTRO}
+RUN cd ~/ros_ws \
+    && apt-get update \
+    && rosdep update \
+    && rosdep install -y --from-paths src --ignore-src --rosdistro ${ROS_DISTRO}
 
 # Compiling ros workspace
 RUN /bin/bash -c "source /opt/ros/$ROS_DISTRO/setup.bash \
                && cd ~/ros_ws/ \
                && rm -rf build \
-               && catkin build -DPYTHON_EXECUTABLE=/usr/bin/python3 -DPYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython3.8.so -DPYTHON_VERSION=3"
+               && catkin build -DPYTHON_EXECUTABLE=/usr/bin/python3 -DPYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython3.6m.so -DPYTHON_VERSION=3"
 
 RUN mkdir -p ~/.gazebo
 RUN git clone https://github.com/osrf/gazebo_models ~/.gazebo/models

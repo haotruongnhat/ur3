@@ -22,7 +22,7 @@ services:
       - DOCKER_RUNTIME=${DOCKER_RUNTIME}
       # Needs to be explicitly define
       - ROS_HOSTNAME=localhost
-    image: haotruongnhat/ros-ur3:melodic
+    image: haotruongnhat/ros-ur3:noetic
     tty: true
     build:
       context: ../
