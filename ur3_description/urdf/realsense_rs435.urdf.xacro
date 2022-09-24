@@ -1,41 +1,19 @@
 <?xml version="1.0"?>
 <robot name="realsense2_camera" xmlns:xacro="http://ros.org/wiki/xacro">
     <xacro:arg name="use_nominal_extrinsics" default="true"/>
-    <xacro:arg name="add_plug" default="true"/>
+    <xacro:arg name="add_plug" default="false" />
+    <xacro:arg name="use_mesh" default="true" />
     <xacro:include filename="$(find realsense2_description)/urdf/_d435.urdf.xacro" />
     
     <xacro:macro name="realsense2_camera" params="prefix parent *origin">
-        <link name="global_camera">
-            <inertial>
-            <origin rpy="0 0 0" xyz="0 0 0"/>
-            <mass value="0.0001"/>
-            <inertia ixx="1e-08" ixy="0" ixz="0" iyy="1e-08" iyz="0" izz="1e-08"/>
-            </inertial>
-        </link>
-
-        <xacro:sensor_d435 parent="global_camera" use_nominal_extrinsics="$(arg use_nominal_extrinsics)">
-            <origin xyz="0 0 0" rpy="0 0 0"/>
+        <xacro:sensor_d435 parent="${parent}" use_nominal_extrinsics="$(arg use_nominal_extrinsics)" add_plug="$(arg add_plug)" use_mesh="$(arg use_mesh)">
+            <xacro:insert_block name="origin"/>
         </xacro:sensor_d435>
 
-        <joint name="${prefix}global_camera" type="fixed">
-            <parent link="${parent}"/>
-            <child link="global_camera"/>
-            <xacro:insert_block name="origin"/>
-        </joint>
-
-        <!-- <joint name="camera_depth_joint" type="fixed">
-            <origin xyz="0 0 0" rpy="${-pi/2} 0 ${-pi/2} "/>
-            <parent link="camera_link"/>
-            <child link="camera_depth_link"/>
-        </joint>
-        <link name="camera_depth_link"/> -->
-
-
-        <!-- camera -->
-        <gazebo reference="global_camera">
-            <sensor name="global_camera" type="depth">
+        <gazebo reference="camera_link">
+            <sensor name="camera" type="depth">
                 <update_rate>20</update_rate>
-                <camera name="global_camera">
+                <camera name="camera">
                     <horizontal_fov>1.047</horizontal_fov>
                     <image>
                         <width>640</width>
@@ -56,7 +34,7 @@
                 <plugin name="camera_controller" filename="libgazebo_ros_openni_kinect.so">
                     <baseline>0.2</baseline>
                     <alwaysOn>true</alwaysOn>
-                    <updateRate>60.0</updateRate>
+                    <updateRate>10</updateRate>
                     <cameraName>global_camera</cameraName>
                     <imageTopicName>/camera/color/image_raw</imageTopicName>
                     <cameraInfoTopicName>/camera/color/camera_info</cameraInfoTopicName>
@@ -79,5 +57,6 @@
                 </plugin>
             </sensor>
         </gazebo>
-  </xacro:macro>
+
+    </xacro:macro>
 </robot>

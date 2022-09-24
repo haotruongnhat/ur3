@@ -214,7 +214,8 @@ RUN /bin/bash -c "cd ~/ros_ws/src/robotiq \
 RUN /bin/bash -c "source /opt/ros/$ROS_DISTRO/setup.bash \
                 && cd ~/ros_ws/src \
                 && git clone -b $ROS_DISTRO-devel  https://github.com/ros/geometry2.git && \
-                git clone https://github.com/eric-wieser/ros_numpy"
+                git clone https://github.com/eric-wieser/ros_numpy && \
+                git clone https://github.com/JenniferBuehler/gazebo-pkgs"
 
 # RUN source /opt/ros/$ROS_DISTRO/setup.bash \
 #     && cd ~/ros_ws \

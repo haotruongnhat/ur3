@@ -20,6 +20,7 @@
 
   <!-- Start up simulated world -->
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="verbose" value="true" />
     <arg name="world_name" value="$(arg world_name)"/>
     <arg name="paused"     value="$(arg paused)"/>
     <arg name="debug"      value="$(arg debug)"/>
@@ -49,6 +50,12 @@
               -J wrist_2_joint -1.57
               -unpause"
         output="screen" />
+
+  <param name="object_description" command="$(find xacro)/xacro '/root/ros_ws/src/deep_grasp_vgu/datasets/object_meshes/bar_clamp.urdf.xacro'"/>
+  <node name="spawn_gazebo_object" pkg="gazebo_ros" type="spawn_model"
+    args="-urdf -param object_description -model bar_clamp -x 0.475 -y 0.1 -z 0.8" respawn="false" output="screen" />
+
+  <node name="grasp_event_republisher" type="grasp_event_republisher" pkg="gazebo_grasp_plugin_ros"  output="screen"/>
 
   <node pkg="rviz" type="rviz" name="rviz" args="-d $(find ur3_description)/config/config.rviz"/>
 

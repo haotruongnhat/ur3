@@ -14,6 +14,8 @@ from geometry_msgs.msg import WrenchStamped
 from control_msgs.msg import FollowJointTrajectoryAction, FollowJointTrajectoryGoal
 # Gripper action
 from control_msgs.msg import GripperCommandAction, GripperCommandGoal
+from gazebo_msgs.msg import ContactsState
+
 # Link attacher
 try:
     from gazebo_ros_link_attacher.srv import Attach, AttachRequest
@@ -67,6 +69,14 @@ class GripperController(object):
             rospy.sleep(0.01)
             if rospy.is_shutdown():
                 return
+
+        rospy.Subscriber('/robotiq_85_left_finger_tip_link_contacts', ContactsState, self._left_tip_contact_cb, queue_size=1)
+        rospy.Subscriber('/robotiq_85_right_finger_tip_link_contacts', ContactsState, self._right_tip_contact_cb, queue_size=1)
+        self._left_tip_contacted = False
+        self._left_tip_object = None
+        self._right_tip_contacted = False
+        self._right_tip_object = None
+        self._current_object_attached = None
 
         attach_plugin = rospy.get_param("grasp_plugin", default=False)
         if attach_plugin:
@@ -127,12 +137,29 @@ class GripperController(object):
                 cmd = np.clip(value, 0.0, self._max_gap)
                 cmd = (self._max_gap - value) / 2.0
             self._goal.command.position = cmd
+
         if wait:
             self._client.send_goal_and_wait(self._goal, execute_timeout=rospy.Duration(2))
+
+            if self._left_tip_contacted & self._right_tip_contacted:
+                object_link = "::".join(self._left_tip_object.split("::")[:-1])
+                self.grab(object_link)
+
         else:
             self._client.send_goal(self._goal)
         rospy.sleep(0.05)
         return True
+
+    def _left_tip_contact_cb(self, msg):
+        if msg.states:
+            self._left_tip_contacted = len(msg.states[0].contact_positions) > 5
+            self._left_tip_object = msg.states[0].collision1_name
+
+    def _right_tip_contact_cb(self, msg):
+        if msg.states:
+            self._right_tip_contacted = len(msg.states[0].contact_positions) > 5
+            self._right_tip_object = msg.states[0].collision1_name
+
 
     def _distance_to_angle(self, distance):
         distance = np.clip(distance, 0, self._max_gap)
@@ -151,6 +178,8 @@ class GripperController(object):
         return self._client.get_state()
 
     def grab(self, link_name):
+        rospy.loginfo("Attach gipper to {}".format(link_name))
+
         parent = self.attach_link.split('::')
         child = link_name.split('::')
         req = AttachRequest()
@@ -159,6 +188,8 @@ class GripperController(object):
         req.model_name_2 = child[0]
         req.link_name_2 = child[1]
         res = self.attach_srv.call(req)
+
+        self._current_object_attached = link_name
         return res.ok
 
     def open(self, wait=True):
@@ -173,7 +204,13 @@ class GripperController(object):
         req.model_name_2 = child[0]
         req.link_name_2 = child[1]
         res = self.detach_srv.call(req)
+
+        self._current_object_attached = None
         return res.ok
+
+    def release_current(self):
+        if self._current_object_attached:
+            self.release(self._current_object_attached)
 
     def stop(self):
         self._client.cancel_goal()
@@ -191,6 +228,12 @@ class GripperController(object):
             return self._max_gap - (self._current_jnt_positions[0] * 2.0)
         else:
             return self._angle_to_distance(self._current_jnt_positions[0])
+
+    def grasp_events_cb(self, msg):
+        pass
+        # if msg.attached:
+        #     rospy.loginfo("Object attached. Cancel gripper goal")
+        #     self.stop()
 
     def joint_states_cb(self, msg):
         """
